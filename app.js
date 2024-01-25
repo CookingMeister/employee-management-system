@@ -1,4 +1,4 @@
-// const mysql = require('mysql2');
+const mysql = require('mysql2');
 const inquirer = require("inquirer");
 // const validator = require("validator");
 
@@ -7,22 +7,34 @@ const inquirer = require("inquirer");
 // app.use(express.static(path.join(__dirname, 'public')));
 // app.use(bodyparser.urlencoded({extended: true}));
 
-// const db = mysql.createPool({
-//     host: 'localhost',
-//     user: 'root',
-//     password: 'Office2024!',
-//     database: 'office',
-//     waitForConnections: true,
-//     connectionLimit: 10,
-//     queueLimit: 0
-//   });
+const db = mysql.createPool({
+    host: 'localhost',
+    user: 'root',
+    password: 'Office2023!',
+    database: 'company',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+  });
 
-// app.get('/', (req, res) => {
-//   db.query('SELECT * FROM {db}', (err, results) => {
-//     if(err) throw err;
-//     res.json(results.row);
-//   });
-// });
+function selectAllEmployees() {
+  db.query('SELECT * FROM employee', (err, results) => {
+    if(err) throw err;
+    console.table(results);
+  });
+};
+function selectAllDeparments() {
+  db.query('SELECT * FROM department', (err, results) => {
+    if(err) throw err;
+    console.table(results);
+  });
+}
+function selectAllRoles() {
+  db.query('SELECT * FROM role', (err, results) => {
+    if(err) throw err;
+    console.table(results);
+  });
+}
 
 // app.post('/', (req, res) => {
 //   const data = req.body;
@@ -75,16 +87,19 @@ const inquirer = require("inquirer");
     switch (answers.menu) {
       case "View All Employees":
         console.log("View All Employees logic");
+        selectAllEmployees();
         // Query database to select all employees
         break;
 
       case "View All Roles":
         console.log("View All Roles logic");
+        selectAllRoles();
         // Query database to select all roles
         break;
 
       case "View All Departments":
         console.log("View All Departments logic");
+        selectAllDeparments();
         // Query database to select all departments
         break;
 
