@@ -5,11 +5,6 @@ const consoleTable = require("console.table");
 // require("console.table");
 // const validator = require("validator");
 
-// Middleware
-// app.use(bodyparser.json());
-// app.use(express.static(path.join(__dirname, 'public')));
-// app.use(bodyparser.urlencoded({extended: true}));
-
 const db = mysql.createPool({
   host: "localhost",
   user: "root",
@@ -36,17 +31,15 @@ LEFT JOIN employee m ON e.manager_id = m.id
 ORDER BY department, salary DESC;
 `, (err, results) => {
     if (err) throw err;
-    // console.log('\n' + consoleTable.getTable(results));
+    // console.log("\n");
+    // console.log(consoleTable.getTable(results));
 
     // Get the table as a string
     const tableString = consoleTable.getTable(results);
-
     // Calculate the width of the table
     const tableWidth = tableString.split("\n")[0].length;
-
     // Calculate the number of spaces needed for centering
     const spacesBefore = Math.floor((process.stdout.columns - tableWidth) / 2);
-
     // Add spaces before the entire table, including headers
     console.log('\n' + '\n' +
       " ".repeat(spacesBefore) +
@@ -67,45 +60,46 @@ function selectAllRoles() {
   });
 }
 
-// app.post('/', (req, res) => {
-//   const data = req.body;
+
+
 //   db.query('INSERT INTO {db} SET ?', data, (err, results) => {
 //     if(err) throw err;
 //     res.send('Values Inserted');
 //   });
-// });
 
-// app.put('/', (req, res) => {
-//   const data = req.body;
-//   const id = req.params.id;
 //   db.query('UPDATE {db} SET ? WHERE id = ?', [data, id], (err, results) => {
 //     if(err) throw err;
 //     res.send('Values Updated');
 //   });
-// });
+const welcomeMessage = () => {
+  console.log('\n' + 'Welcome to the company database!'+ '\n');
+};
+const welcomeQueries = [
+  {
+    type: "list",
+    name: "menu",
+    message: "What would you like to do today?" + '\n',
+    choices: [
+      "View All Employees",
+      "View All Roles",
+      "View All Departments",
+      "Add Employee",
+      "Add Role",
+      "Add Department",
+      "Update Employee Role",
+      "EXIT",
+    ],
+  },
+]
 
 // Prompt user for input
 async function promptUser() {
+  welcomeMessage();
   let repeat = true;
   while (repeat) {
+    // console.clear();
     try {
-      const answers = await inquirer.prompt([
-        {
-          type: "list",
-          name: "menu",
-          message: "What would you like to do?",
-          choices: [
-            "View All Employees",
-            "View All Roles",
-            "View All Departments",
-            "Add Employee",
-            "Add Role",
-            "Add Department",
-            "Update Employee Role",
-            "EXIT",
-          ],
-        },
-      ]);
+      const answers = await inquirer.prompt(welcomeQueries);
       checkAnswer(answers);
     } catch (error) {
       console.log(error);
