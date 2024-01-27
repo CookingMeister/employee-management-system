@@ -1,17 +1,18 @@
-const mysql = require("mysql2");
+// const mysql = require('mysql2');
 const inquirer = require("inquirer");
-// const consoleTable = require("console.table");
-const db = require("./lib/utils/config.js");
+// const consoleTable = require('console.table');
+// const db = require('./lib/utils/config.js');
 const {
   viewAllEmployees,
   showAllDeparments,
   viewAllRoles,
   addDepartment,
   addEmployee,
-  addRole, viewAllDepts
+  addRole,
+  getDepts,
 } = require("./lib/utils/utils.js");
 // require('dotenv').config();
-// require("console.table");
+// require('console.table');
 const validator = require("validator");
 
 //   db.query('INSERT INTO {db} SET ?', data, (err, results) => {
@@ -43,6 +44,16 @@ const welcomeQueries = [
     ],
   },
 ];
+const departmentPrompt = [
+  {
+    type: "input",
+    name: "name",
+    message: "What is the name of the department?",
+    validate: (input) => {
+      return validator.isEmpty(input) ? "Department name is required" : true;
+    },
+  },
+];
 const rolePrompt = [
   {
     type: "input",
@@ -57,9 +68,7 @@ const rolePrompt = [
     name: "salary",
     message: "What is the salary of the role?",
     validate: (input) => {
-      return validator.isNumeric(input)
-      ? true
-      : "Salary is required";
+      return validator.isNumeric(input) ? true : "Salary is required";
     },
   },
   {
@@ -67,13 +76,13 @@ const rolePrompt = [
     name: "department_id",
     message: "What department id is associated with this role?",
     choices: async () => {
-      const departments = await viewAllDepts();
+      const departments = await getDepts();
       return departments.map((department) => ({
         name: department.name,
         value: department.id,
       }));
     },
-  }
+  },
 ];
 
 // Prompt user for input
@@ -89,25 +98,23 @@ async function promptUser() {
     }
   }
 
+  // Switch Case Logic
   async function checkAnswer(answers) {
-    // Switch Case Logic
     switch (answers.menu) {
       case "View All Employees":
-        console.log("View All Employees logic");
+        // Query database to view all employees
         await viewAllEmployees();
-        // Query database to select all employees
+
         break;
 
       case "View All Roles":
-        console.log("View All Roles logic");
+        // Query database to view all roles with department names
         await viewAllRoles();
-        // Query database to select all roles
         break;
 
       case "View All Departments":
-        console.log("View All Departments logic");
+        // Query database to view all departments
         await showAllDeparments();
-        // Query database to select all departments
         break;
 
       case "Add Employee":
@@ -123,20 +130,6 @@ async function promptUser() {
         break;
 
       case "Add Department":
-        console.log("Add department logic");
-        // isActive = true;
-        const departmentPrompt = [
-          {
-            type: "input",
-            name: "name",
-            message: "What is the name of the department?",
-            validate: (input) => {
-              return validator.isEmpty(input)
-                ? "Department name is required"
-                : true;
-            },
-          },
-        ];
         let department = await inquirer.prompt(departmentPrompt);
         await addDepartment(department);
         await showAllDeparments();
@@ -149,14 +142,12 @@ async function promptUser() {
         break;
 
       case "EXIT":
-        console.log("Thank you for using the employee management system!");
-        isActive = false; // break while loop
+        isActive = false; // Break while loop
         console.clear();
         console.log(
           "Thank you for using the employee management system! Goodbye!" + "\n"
         );
-        process.exit();
-      // break; unneccesary for now since EXIT case ends while loop
+        process.exit(); // End node process
 
       default:
         throw new Error("Invalid selection");
