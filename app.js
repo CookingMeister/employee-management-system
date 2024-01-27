@@ -10,6 +10,7 @@ const {
   addEmployee,
   addRole,
   getDepts,
+  getRoles
 } = require("./lib/utils/utils.js");
 // require('dotenv').config();
 // require('console.table');
@@ -118,9 +119,38 @@ async function promptUser() {
         break;
 
       case "Add Employee":
-        console.log("Add employees logic");
-        isActive = false;
-        await addEmployee();
+        let employee = await inquirer.prompt([
+          {
+            type: "input",
+            name: "first_name",//works
+            message: "What is the employee's first name?",
+            validate: (input) => {
+              return validator.isEmpty(input) ? "First name is required" : true;
+            }
+          },
+          {
+            type: "input", //works
+            name: "last_name",
+            message: "What is the employee's last name?",
+            validate: (input) => {
+              return validator.isEmpty(input) ? "Last name is required" : true;
+            }
+          },
+          {
+            type: "list",
+            name: "role_id",
+            message: "What is the employee's role?",
+            choices: async () => {
+              const roles = await getRoles(); // works
+              return roles.map((role) => ({
+                name: role.title,
+                value: role.id
+              }));
+            }
+          }
+        ]);// dept, salary, manager need to be added
+        await addEmployee(employee);
+        await viewAllEmployees();
         break;
 
       case "Add Role":
