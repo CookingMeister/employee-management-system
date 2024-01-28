@@ -6,16 +6,19 @@ const validator = require("validator");
 const {
   viewAllEmployees,
   viewAllDeparments,
-  viewAllRoles, viewEmByManager, viewEmByDept,
+  viewAllRoles,
+  viewEmByManager,
+  viewEmByDept,
   addDepartment,
   addEmployee,
   addRole,
-  getDepts, getEmployees,
-  getRoles, updateRole
+  getDepts,
+  getEmployees,
+  getRoles,
+  updateRole, deleteItem,
 } = require("./lib/utils/utils.js");
 // require('dotenv').config();
 // require('console.table');
-
 
 const welcomeMessage = () => {
   console.log("\n" + "Welcome to the company database!" + "\n");
@@ -35,6 +38,7 @@ const menuQueries = [
       "Update Employee Role",
       "View Employees by Manager",
       "View Employees by Department",
+      "Delete Item",
       "EXIT",
     ],
   },
@@ -48,17 +52,17 @@ const departmentPrompt = [
       return validator.isEmpty(input) ? "Department name is required" : true;
     },
   },
-]; 
+];
 const deptListPrompt = [
   {
     type: "list",
     name: "d_id",
     message: "What department is the employee in?",
-    choices: async() => {
+    choices: async () => {
       const depts = await getDepts();
-      return depts.map(dept => ({
+      return depts.map((dept) => ({
         name: dept.name,
-        value: dept.id
+        value: dept.id,
       }));
     },
   },
@@ -100,11 +104,11 @@ const rolePrompt = [
 const employPrompt = [
   {
     type: "input",
-    name: "first_name",//works
+    name: "first_name", //works
     message: "What is the employee's first name?",
     validate: (input) => {
       return validator.isEmpty(input) ? "First name is required" : true;
-    }
+    },
   },
   {
     type: "input", //works
@@ -112,7 +116,7 @@ const employPrompt = [
     message: "What is the employee's last name?",
     validate: (input) => {
       return validator.isEmpty(input) ? "Last name is required" : true;
-    }
+    },
   },
   {
     type: "list",
@@ -122,11 +126,11 @@ const employPrompt = [
       const roles = await getRoles(); // works
       return roles.map((role) => ({
         name: role.title,
-        value: role.id
+        value: role.id,
       }));
-    }
-  }
-];// manager needs t be added
+    },
+  },
+]; // manager needs t be added
 const managerPrompt = [
   {
     type: "list",
@@ -136,10 +140,10 @@ const managerPrompt = [
       const employees = await getEmployees();
       return employees.map((employee) => ({
         name: `${employee.first_name} ${employee.last_name}`,
-        value: employee.id
+        value: employee.id,
       }));
-    }
-  }
+    },
+  },
 ];
 const emRolePrompt = [
   {
@@ -149,11 +153,11 @@ const emRolePrompt = [
     choices: async () => {
       const employees = await getEmployees();
       return employees.map((employee) => ({
-        name:`${employee.first_name} ${employee.last_name}`,
-        value: employee.id
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id,
       }));
-    }
-  }
+    },
+  },
 ];
 const updateRolePrompt = [
   {
@@ -164,14 +168,52 @@ const updateRolePrompt = [
       const roles = await getRoles();
       return roles.map((role) => ({
         name: role.title,
-        value: role.id
+        value: role.id,
       }));
+    },
+  },
+];
+const deletePrompt = [
+  {
+    type: "list",
+    name: "item",
+    message: "What would you like to delete?",
+    choices: ["Employee", "Role", "Department"],
+  },
+  {
+    type: "list",
+    name: "id",
+    message: "What is the item you want to delete?",
+    choices: async (answer) => {
+      const lower = answer.item.toLowerCase(); // Convert to lowercase
+      switch(lower) {
+        case "employee":
+          const employees = await getEmployees();
+          return employees.map((employee) => ({
+            name: `${employee.first_name} ${employee.last_name}`,
+            value: employee.id
+          }));
+        case "role":
+          const roles = await getRoles();
+          return roles.map((role) => ({
+            name: role.title,
+            value: role.id
+          }));
+        case "department":
+          const departments = await getDepts();
+          return departments.map((department) => ({
+            name: department.name,
+            value: department.id
+          }));
+          default:
+            return [];
+      }
     }
-  }  
+  },
 ];
 
 // Welcome and Prompt user for input
-  const init = async () => {
+const init = async () => {
   welcomeMessage();
   let isActive = true;
   while (isActive) {
@@ -238,16 +280,32 @@ const updateRolePrompt = [
         await viewEmByDept(dept.d_id);
         break;
 
+      case "Delete Item":
+        // Prompt user to select item to delete
+        isActive = false;
+        const toDelete = await inquirer.prompt(deletePrompt);        
+        await deleteItem(toDelete.item, toDelete.id);
+        // Which table to view based on deletion criteria
+        toDelete.item === "Employee"
+          ? await viewAllEmployees()
+          : toDelete.item === "Role"
+          ? await viewAllRoles()
+          : await viewAllDeparments();
+        isActive = true;
+        break;
+
       case "EXIT":
         isActive = false; // Break while loop
         console.clear();
-        console.log("Thank you for using the employee management system! Goodbye!" + "\n");
+        console.log(
+          "Thank you for using the employee management system! Goodbye!" + "\n"
+        );
         process.exit(); // End node process
 
       default:
         throw new Error("Invalid selection");
     }
   }
-}
+};
 // Initialize App
 init();
