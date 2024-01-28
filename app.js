@@ -6,7 +6,7 @@ const validator = require("validator");
 const {
   viewAllEmployees,
   viewAllDeparments,
-  viewAllRoles, viewEmByManager,
+  viewAllRoles, viewEmByManager, viewEmByDept,
   addDepartment,
   addEmployee,
   addRole,
@@ -34,6 +34,7 @@ const welcomeQueries = [
       "Add Department",
       "Update Employee Role",
       "View Employees by Manager",
+      "View Employees by Department",
       "EXIT",
     ],
   },
@@ -45,6 +46,20 @@ const departmentPrompt = [
     message: "What is the name of the department?",
     validate: (input) => {
       return validator.isEmpty(input) ? "Department name is required" : true;
+    },
+  },
+]; 
+const deptListPrompt = [
+  {
+    type: "list",
+    name: "d_id",
+    message: "What department is the employee in?",
+    choices: async() => {
+      const depts = await getDepts();
+      return depts.map(dept => ({
+        name: dept.name,
+        value: dept.id
+      }));
     },
   },
 ];
@@ -214,9 +229,15 @@ async function promptUser() {
       case "View Employees by Manager":
         // Query database to view all employees by manager
         const manager = await inquirer.prompt(managerPrompt);
-        console.log(manager.manager_id);
+        // console.log(manager.manager_id);
         await viewEmByManager(manager.manager_id);
-        break;  
+        break;
+
+      case "View Employees by Department":
+          // Query database to view all employees by department
+          const dept = await inquirer.prompt(deptListPrompt);
+          await viewEmByDept(dept.d_id);
+          break;
 
       case "EXIT":
         isActive = false; // Break while loop
