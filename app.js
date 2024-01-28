@@ -1,5 +1,6 @@
 // const mysql = require('mysql2');
 const inquirer = require("inquirer");
+const validator = require("validator");
 // const consoleTable = require('console.table');
 // const db = require('./lib/utils/config.js');
 const {
@@ -9,22 +10,13 @@ const {
   addDepartment,
   addEmployee,
   addRole,
-  getDepts,
-  getRoles
+  getDepts, getEmployees,
+  getRoles, updateRole
 } = require("./lib/utils/utils.js");
 // require('dotenv').config();
 // require('console.table');
-const validator = require("validator");
 
-//   db.query('INSERT INTO {db} SET ?', data, (err, results) => {
-//     if(err) throw err;
-//     res.send('Values Inserted');
-//   });
 
-//   db.query('UPDATE {db} SET ? WHERE id = ?', [data, id], (err, results) => {
-//     if(err) throw err;
-//     res.send('Values Updated');
-//   });
 const welcomeMessage = () => {
   console.log("\n" + "Welcome to the company database!" + "\n");
 };
@@ -59,23 +51,27 @@ const rolePrompt = [
   {
     type: "input",
     name: "title",
-    message: "What is the title of the role?",
+    message: "What is the name of the role?",
     validate: (input) => {
-      return validator.isEmpty(input) ? "Role title is required" : true;
+      return validator.isEmpty(input) ? "Role name is required" : true;
     },
   },
   {
     type: "input",
     name: "salary",
-    message: "What is the salary of the role?",
+    message: "How much is the salary?",
     validate: (input) => {
-      return validator.isNumeric(input) ? true : "Salary is required";
+      return validator.isEmpty(input)
+        ? "Salary is required"
+        : !validator.isNumeric(input)
+        ? "Salary must be numeric"
+        : true;
     },
   },
   {
     type: "list",
     name: "department_id",
-    message: "What department id is associated with this role?",
+    message: "What department is associated with this role?",
     choices: async () => {
       const departments = await getDepts();
       return departments.map((department) => ({
@@ -85,6 +81,36 @@ const rolePrompt = [
     },
   },
 ];
+const employPrompt = [
+  {
+    type: "input",
+    name: "first_name",//works
+    message: "What is the employee's first name?",
+    validate: (input) => {
+      return validator.isEmpty(input) ? "First name is required" : true;
+    }
+  },
+  {
+    type: "input", //works
+    name: "last_name",
+    message: "What is the employee's last name?",
+    validate: (input) => {
+      return validator.isEmpty(input) ? "Last name is required" : true;
+    }
+  },
+  {
+    type: "list",
+    name: "role_id",
+    message: "What is the employee's role?",
+    choices: async () => {
+      const roles = await getRoles(); // works
+      return roles.map((role) => ({
+        name: role.title,
+        value: role.id
+      }));
+    }
+  }
+];// manager needs to be added
 
 // Prompt user for input
 async function promptUser() {
@@ -119,36 +145,7 @@ async function promptUser() {
         break;
 
       case "Add Employee":
-        let employee = await inquirer.prompt([
-          {
-            type: "input",
-            name: "first_name",//works
-            message: "What is the employee's first name?",
-            validate: (input) => {
-              return validator.isEmpty(input) ? "First name is required" : true;
-            }
-          },
-          {
-            type: "input", //works
-            name: "last_name",
-            message: "What is the employee's last name?",
-            validate: (input) => {
-              return validator.isEmpty(input) ? "Last name is required" : true;
-            }
-          },
-          {
-            type: "list",
-            name: "role_id",
-            message: "What is the employee's role?",
-            choices: async () => {
-              const roles = await getRoles(); // works
-              return roles.map((role) => ({
-                name: role.title,
-                value: role.id
-              }));
-            }
-          }
-        ]);// dept, salary, manager need to be added
+        let employee = await inquirer.prompt(employPrompt);
         await addEmployee(employee);
         await viewAllEmployees();
         break;
@@ -166,9 +163,36 @@ async function promptUser() {
         break;
 
       case "Update Employee Role":
-        console.log("Update employee role logic");
-        isActive = false;
-        await updateEmloyeeRole();
+        const emToUpdate = await inquirer.prompt([
+          {
+            type: "list",
+            name: "employee",
+            message: "Which employee's role do you want to update?",
+            choices: async () => {
+              const employees = await getEmployees();
+              return employees.map((employee) => ({
+                name: employee.first_name + " " + employee.last_name,
+                value: employee.id
+              }));
+            }
+          }
+        ]);
+        const roleToUpdate = await inquirer.prompt([
+          {
+            type: "list",
+            name: "role",
+            message: "What is the employee's new role?",
+            choices: async () => {
+              const roles = await getRoles();
+              return roles.map((role) => ({
+                name: role.title,
+                value: role.id
+              }));
+            }
+          }  
+        ]);
+        await updateRole(emToUpdate.employee, roleToUpdate.role);
+        await viewAllEmployees();
         break;
 
       case "EXIT":
