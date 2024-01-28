@@ -20,7 +20,7 @@ const {
 const welcomeMessage = () => {
   console.log("\n" + "Welcome to the company database!" + "\n");
 };
-const welcomeQueries = [
+const menuQueries = [
   {
     type: "list",
     name: "menu",
@@ -126,11 +126,11 @@ const employPrompt = [
       }));
     }
   }
-];// manager needs to be added
+];// manager needs t be added
 const managerPrompt = [
   {
     type: "list",
-    name: "manager_id",
+    name: "m_id",
     message: "Who is the employee's manager?",
     choices: async () => {
       const employees = await getEmployees();
@@ -149,7 +149,7 @@ const emRolePrompt = [
     choices: async () => {
       const employees = await getEmployees();
       return employees.map((employee) => ({
-        name: employee.first_name + " " + employee.last_name,
+        name:`${employee.first_name} ${employee.last_name}`,
         value: employee.id
       }));
     }
@@ -170,13 +170,13 @@ const updateRolePrompt = [
   }  
 ];
 
-// Prompt user for input
-async function promptUser() {
+// Welcome and Prompt user for input
+  const init = async () => {
   welcomeMessage();
   let isActive = true;
   while (isActive) {
     try {
-      const answers = await inquirer.prompt(welcomeQueries);
+      const answers = await inquirer.prompt(menuQueries);
       await checkAnswer(answers);
     } catch (error) {
       console.log(error);
@@ -220,31 +220,28 @@ async function promptUser() {
         break;
 
       case "Update Employee Role":
-        const emToUpdate = await inquirer.prompt(emRolePrompt);
-        const roleToUpdate = await inquirer.prompt(updateRolePrompt);
-        await updateRole(emToUpdate.employee, roleToUpdate.role);
+        const updateEm = await inquirer.prompt(emRolePrompt);
+        const upRole = await inquirer.prompt(updateRolePrompt);
+        await updateRole(updateEm.employee, upRole.role);
         await viewAllEmployees();
         break;
 
       case "View Employees by Manager":
         // Query database to view all employees by manager
-        const manager = await inquirer.prompt(managerPrompt);
-        // console.log(manager.manager_id);
-        await viewEmByManager(manager.manager_id);
+        const man = await inquirer.prompt(managerPrompt);
+        await viewEmByManager(man.m_id);
         break;
 
       case "View Employees by Department":
-          // Query database to view all employees by department
-          const dept = await inquirer.prompt(deptListPrompt);
-          await viewEmByDept(dept.d_id);
-          break;
+        // Query database to view all employees by department
+        const dept = await inquirer.prompt(deptListPrompt);
+        await viewEmByDept(dept.d_id);
+        break;
 
       case "EXIT":
         isActive = false; // Break while loop
         console.clear();
-        console.log(
-          "Thank you for using the employee management system! Goodbye!" + "\n"
-        );
+        console.log("Thank you for using the employee management system! Goodbye!" + "\n");
         process.exit(); // End node process
 
       default:
@@ -252,4 +249,5 @@ async function promptUser() {
     }
   }
 }
-promptUser();
+// Initialize App
+init();
