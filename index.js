@@ -17,17 +17,15 @@ const {
   getRoles,
   updateRole, deleteItem,
 } = require("./lib/utils/utils.js");
-// require('dotenv').config();
-// require('console.table');
 
 const welcomeMessage = () => {
-  console.log("\n" + "Welcome to the company database!" + "\n");
+  console.log("\nWelcome to the company database!\n");
 };
 const menuQueries = [
   {
     type: "list",
     name: "menu",
-    message: "What would you like to do today?" + "\n",
+    message: "What would you like to do today?\n",
     choices: [
       "View All Employees",
       "View All Roles",
@@ -130,15 +128,30 @@ const employPrompt = [
       }));
     },
   },
-]; // manager needs t be added
+  {
+    type: "list",
+    name: "manager_id",
+    message: "Who is the employee's manager?",
+    choices: async () => {
+      const manager = await getEmployees();
+      const choices = manager.map((employee) => ({
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id,
+      }));
+      choices.push({ name: "NONE", value: null });
+      return choices;
+    },
+    default: null,
+  },
+];
 const managerPrompt = [
   {
     type: "list",
     name: "m_id",
-    message: "Who is the employee's manager?",
+    message: "Who is the manager?",
     choices: async () => {
-      const employees = await getEmployees();
-      return employees.map((employee) => ({
+      const manager = await getEmployees();
+      return manager.map((employee) => ({
         name: `${employee.first_name} ${employee.last_name}`,
         value: employee.id,
       }));
@@ -245,6 +258,8 @@ const init = async () => {
 
       case "Add Employee":
         let employee = await inquirer.prompt(employPrompt);
+        // console.log(JSON.stringify(employee, null, 2));
+        // console.log(employee.first_name, employee.last_name, employee.manager_id);
         await addEmployee(employee);
         await viewAllEmployees();
         break;
@@ -286,9 +301,9 @@ const init = async () => {
         const toDelete = await inquirer.prompt(deletePrompt);        
         await deleteItem(toDelete.item, toDelete.id);
         // Which table to view based on deletion criteria
-        toDelete.item === "Employee"
+        toDelete.item === 'Employee'
           ? await viewAllEmployees()
-          : toDelete.item === "Role"
+          : toDelete.item === 'Role'
           ? await viewAllRoles()
           : await viewAllDeparments();
         isActive = true;
@@ -298,12 +313,12 @@ const init = async () => {
         isActive = false; // Break while loop
         console.clear();
         console.log(
-          "Thank you for using the employee management system! Goodbye!" + "\n"
+          'Thank you for using the employee management system! Goodbye!' + '\n'
         );
         process.exit(); // End node process
 
       default:
-        throw new Error("Invalid selection");
+        throw new Error('Invalid selection');
     }
   }
 };
