@@ -5,8 +5,8 @@ const validator = require("validator");
 // const db = require('./lib/utils/config.js');
 const {
   viewAllEmployees,
-  showAllDeparments,
-  viewAllRoles,
+  viewAllDeparments,
+  viewAllRoles, viewEmByManager,
   addDepartment,
   addEmployee,
   addRole,
@@ -33,6 +33,7 @@ const welcomeQueries = [
       "Add Role",
       "Add Department",
       "Update Employee Role",
+      "View Employees by Manager",
       "EXIT",
     ],
   },
@@ -111,6 +112,48 @@ const employPrompt = [
     }
   }
 ];// manager needs to be added
+const managerPrompt = [
+  {
+    type: "list",
+    name: "manager_id",
+    message: "Who is the employee's manager?",
+    choices: async () => {
+      const employees = await getEmployees();
+      return employees.map((employee) => ({
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id
+      }));
+    }
+  }
+];
+const emRolePrompt = [
+  {
+    type: "list",
+    name: "employee",
+    message: "Which employee's role do you want to update?",
+    choices: async () => {
+      const employees = await getEmployees();
+      return employees.map((employee) => ({
+        name: employee.first_name + " " + employee.last_name,
+        value: employee.id
+      }));
+    }
+  }
+];
+const updateRolePrompt = [
+  {
+    type: "list",
+    name: "role",
+    message: "What is the employee's new role?",
+    choices: async () => {
+      const roles = await getRoles();
+      return roles.map((role) => ({
+        name: role.title,
+        value: role.id
+      }));
+    }
+  }  
+];
 
 // Prompt user for input
 async function promptUser() {
@@ -131,7 +174,6 @@ async function promptUser() {
       case "View All Employees":
         // Query database to view all employees
         await viewAllEmployees();
-
         break;
 
       case "View All Roles":
@@ -141,7 +183,7 @@ async function promptUser() {
 
       case "View All Departments":
         // Query database to view all departments
-        await showAllDeparments();
+        await viewAllDeparments();
         break;
 
       case "Add Employee":
@@ -159,41 +201,22 @@ async function promptUser() {
       case "Add Department":
         let department = await inquirer.prompt(departmentPrompt);
         await addDepartment(department);
-        await showAllDeparments();
+        await viewAllDeparments();
         break;
 
       case "Update Employee Role":
-        const emToUpdate = await inquirer.prompt([
-          {
-            type: "list",
-            name: "employee",
-            message: "Which employee's role do you want to update?",
-            choices: async () => {
-              const employees = await getEmployees();
-              return employees.map((employee) => ({
-                name: employee.first_name + " " + employee.last_name,
-                value: employee.id
-              }));
-            }
-          }
-        ]);
-        const roleToUpdate = await inquirer.prompt([
-          {
-            type: "list",
-            name: "role",
-            message: "What is the employee's new role?",
-            choices: async () => {
-              const roles = await getRoles();
-              return roles.map((role) => ({
-                name: role.title,
-                value: role.id
-              }));
-            }
-          }  
-        ]);
+        const emToUpdate = await inquirer.prompt(emRolePrompt);
+        const roleToUpdate = await inquirer.prompt(updateRolePrompt);
         await updateRole(emToUpdate.employee, roleToUpdate.role);
         await viewAllEmployees();
         break;
+
+      case "View Employees by Manager":
+        // Query database to view all employees by manager
+        const manager = await inquirer.prompt(managerPrompt);
+        console.log(manager.manager_id);
+        await viewEmByManager(manager.manager_id);
+        break;  
 
       case "EXIT":
         isActive = false; // Break while loop
