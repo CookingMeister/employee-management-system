@@ -1,8 +1,6 @@
-// const mysql = require('mysql2');
 const inquirer = require("inquirer");
 const validator = require("validator");
-// const consoleTable = require('console.table');
-// const db = require('./lib/utils/config.js');
+
 const {
   viewAllEmployees,
   viewAllDeparments,
@@ -15,7 +13,7 @@ const {
   getDepts,
   getEmployees,
   getRoles,
-  updateRole, deleteItem,
+  updateRole, updateManager, getBudgetByDept, getBudgetTotal, deleteItem,
 } = require("./lib/utils/utils.js");
 
 const welcomeMessage = () => {
@@ -34,8 +32,10 @@ const menuQueries = [
       "Add Role",
       "Add Department",
       "Update Employee Role",
+      'Update Employee Manager',
       "View Employees by Manager",
       "View Employees by Department",
+      'View Budget',
       "Delete Item",
       "EXIT",
     ],
@@ -186,6 +186,32 @@ const updateRolePrompt = [
     },
   },
 ];
+const updateManagerPrompt = [
+  {
+    type: "list",
+    name: "id",
+    message: "Which employee's manager do you want to update?",
+    choices: async () => {
+      const em = await getEmployees();
+      return em.map((employee) => ({
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id,
+      }));
+    },
+  },
+  {
+    type: "list",
+    name: "manager",
+    message: "Who do you want to assign as the new manager?",
+    choices: async () => {
+      const managers = await getEmployees();
+      return managers.map((manager) => ({
+        name: `${manager.first_name} ${manager.last_name}`,
+        value: manager.id
+      }));
+    }
+  }
+];
 const deletePrompt = [
   {
     type: "list",
@@ -258,8 +284,6 @@ const init = async () => {
 
       case "Add Employee":
         let employee = await inquirer.prompt(employPrompt);
-        // console.log(JSON.stringify(employee, null, 2));
-        // console.log(employee.first_name, employee.last_name, employee.manager_id);
         await addEmployee(employee);
         await viewAllEmployees();
         break;
@@ -281,6 +305,12 @@ const init = async () => {
         const upRole = await inquirer.prompt(updateRolePrompt);
         await updateRole(updateEm.employee, upRole.role);
         await viewAllEmployees();
+        break;
+
+      case "Update Employee Manager":
+        const updateMan = await inquirer.prompt(updateManagerPrompt);
+        await updateManager(updateMan.id, updateMan.manager);
+        await viewEmByManager(updateMan.manager);
         break;
 
       case "View Employees by Manager":
@@ -309,11 +339,33 @@ const init = async () => {
         isActive = true;
         break;
 
+      case "View Budget":
+        // Query database to view total utilized budget by department
+        const answers = await inquirer.prompt({
+          type: 'list',
+          name: 'department',
+          message: 'Which department budget do you want to view?',
+          choices: async () => {
+            const departments = await getDepts();
+            const choices = departments.map(department => ({
+              name: department.name,
+              value: department.id
+            }));
+            choices.push({ name: "All Departments", value: "all" });
+            return choices;
+          }
+        });
+        console.log(answers.department);
+        (await answers.department) === "all"
+          ? getBudgetTotal()
+          : getBudgetByDept(answers.department);
+        break;
+       
       case "EXIT":
         isActive = false; // Break while loop
         console.clear();
         console.log(
-          'Thank you for using the employee management system! Goodbye!' + '\n'
+          '\nThank you for using the employee management system! Goodbye!\n'
         );
         process.exit(); // End node process
 
