@@ -117,7 +117,10 @@ const init = async () => {
 
       case 'Delete Item':
         // Prompt user to select item to delete
-        const toDelete = await inquirer.prompt(deletePrompt);        
+        const toDelete = await inquirer.prompt(deletePrompt);
+        if (toDelete.item === 'Go Back') {
+          break;  // if go back, break out of switch
+        }
         await deleteItem(toDelete.item, toDelete.id);
         // Which table to view based on deletion criteria
         toDelete.item === 'Employee'
