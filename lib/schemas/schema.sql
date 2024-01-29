@@ -28,7 +28,3 @@ CREATE TABLE employee (
   FOREIGN KEY (manager_id) REFERENCES employee(id)
     ON UPDATE CASCADE ON DELETE SET NULL
 );
-
---aliases--
-
-
