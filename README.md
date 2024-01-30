@@ -20,7 +20,7 @@ MDN Web Docs was referenced for String methods split() and replace(), Node.js do
 
 ## Demo
 
-Here is a video showing the functionality of the employee management system: <video src="lib/assets/employee%20demo.mp4" controls title="Title"></video>
+A video showing the functionality of the employee management system can be found [here.](https://drive.google.com/file/d/1h5kSsPnSDht4ArUy9Gu_zOHtc0TunJWh/view?usp=drive_link)
 
 ## Tests
 
